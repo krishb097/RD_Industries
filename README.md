@@ -19,11 +19,8 @@ This platform features protected user modules, real-time WebRTC live video calli
 ---
 
 ## 🔗 URLs & LINKs
-RD_Industires : https://reversing-ongoing-underdog.ngrok-free.dev
-OR /
-RD_Industires : https://reversing-ongoing-underdog.ngrok-free.dev/index.html
----
-RD_Industries/Admin : https://reversing-ongoing-underdog.ngrok-free.dev/admin.html
+RD_Industires : https://krishb097.github.io/RD_Industries/
+RD_Industries/Admin : https://https://krishb097.github.io/RD_Industries/admin.html
 
 ---
 
