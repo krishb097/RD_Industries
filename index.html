@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RD - Industries | Enterprise Tech Platform</title>
+    
+    <!-- FontAwesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Orbitron:wght@600;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- PEERJS REAL-TIME WEBRTC CDN -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+    <style>
+        :root {
+            --bg-primary: #0a0c10;
+            --bg-card: #12161f;
+            --bg-vscode: #1e1e1e;
+            --surface-border: rgba(255, 255, 255, 0.08);
+            --silver-primary: #e2e8f0;
+            --silver-metallic: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #64748b 100%);
+            --accent-glow: rgba(226, 232, 240, 0.15);
+            --accent-blue: #38bdf8;
+            --accent-green: #25D366;
+            --accent-red: #ef4444;
+            --accent-purple: #a855f7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --font-heading: 'Orbitron', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+            --font-code: 'Fira Code', monospace;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-body); -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-primary); color: var(--text-main); overflow-x: hidden; line-height: 1.6; }
+        
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.03) 0%, transparent 40%);
+            pointer-events: none; z-index: -1;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            position: fixed; top: 0; left: 0; width: 100%; padding: 0.85rem 1.25rem;
+            background: rgba(10, 12, 16, 0.92); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--surface-border); z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .brand-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text-main); }
+        .brand-logo img { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255, 255, 255, 0.2); }
+        .brand-logo span { font-family: var(--font-heading); font-weight: 800; font-size: 0.95rem; letter-spacing: 1px; background: var(--silver-metallic); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .nav-links { display: flex; gap: 0.3rem; align-items: center; overflow-x: auto; }
+        .nav-link { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: 0.2s; cursor: pointer; padding: 0.4rem 0.7rem; border-radius: 8px; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+        .nav-link:hover, .nav-link.active { color: var(--text-main); background: rgba(255, 255, 255, 0.08); }
+
+        .user-profile-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(18, 22, 31, 0.8); border: 1px solid var(--surface-border);
+            padding: 0.5rem 1rem; border-radius: 30px; margin-bottom: 1rem;
+        }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--accent-blue); }
+
+        .module { display: none; opacity: 0; transform: translateY(15px); transition: opacity 0.3s ease, transform 0.3s ease; padding-top: 75px; padding-bottom: 40px; min-height: 100vh; }
+        .module.active { display: block; opacity: 1; transform: translateY(0); }
+        .container { width: 100%; max-width: 1150px; margin: 0 auto; padding: 0 1.25rem; }
+
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0.65rem 1.2rem; border-radius: var(--radius-md); font-weight: 600; font-size: 0.85rem; text-decoration: none; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-primary { background: var(--silver-primary); color: #000; }
+        .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-main); border: 1px solid var(--surface-border); }
+        .btn-green { background: var(--accent-green); color: #000; }
+        .btn-purple { background: var(--accent-purple); color: #fff; }
+        .btn-danger { background: var(--accent-red); color: #fff; }
+
+        /* VS CODE WORKSPACE STYLE */
+        .ide-container {
+            background: var(--bg-vscode);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .ide-topbar { background: #323233; padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: #cccccc; }
+        .ide-tabs { display: flex; gap: 2px; background: #2d2d2d; }
+        .ide-tab { padding: 6px 14px; background: #2d2d2d; color: #888; cursor: pointer; font-family: var(--font-code); font-size: 0.8rem; border-right: 1px solid #1e1e1e; }
+        .ide-tab.active { background: #1e1e1e; color: #fff; border-top: 2px solid var(--accent-blue); }
+        .ide-body { display: grid; grid-template-columns: 1fr; min-height: 380px; }
+        @media(min-width: 768px) { .ide-body { grid-template-columns: 1fr 1fr; } }
+        
+        .code-editor { background: #1e1e1e; color: #d4d4d4; font-family: var(--font-code); font-size: 0.85rem; padding: 1rem; border: none; outline: none; resize: none; width: 100%; height: 100%; min-height: 250px; }
+        .output-panel { background: #fff; border-left: 1px solid #333; height: 100%; min-height: 250px; }
+        .terminal-console { background: #181818; color: #38bdf8; font-family: var(--font-code); padding: 10px; font-size: 0.78rem; border-top: 1px solid #333; max-height: 100px; overflow-y: auto; }
+
+        /* REAL VIDEO CALL STUDIO & NOTEPAD */
+        .video-studio-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1rem; }
+        @media(min-width: 768px) { .video-studio-grid { grid-template-columns: 1fr 1fr; } }
+        .video-viewport { background: #000; border: 1px solid var(--surface-border); border-radius: var(--radius-md); height: 260px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        .video-tag { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.75); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; z-index: 10; }
+
+        .notes-card { background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); border-radius: var(--radius-md); padding: 1rem; display: flex; flex-direction: column; }
+
+        .form-card { background: var(--bg-card); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: 1.5rem; max-width: 950px; margin: 0 auto; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-muted); }
+        .form-control { width: 100%; padding: 0.75rem 1rem; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--surface-border); border-radius: var(--radius-md); color: var(--text-main); font-size: 0.9rem; outline: none; }
+
+        /* STRICT AUTH MODAL OVERLAY */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); backdrop-filter: blur(12px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 1rem; }
+        .modal-overlay.show { display: flex; }
+        .modal-card { background: var(--bg-card); border: 1px solid var(--surface-border); padding: 2.2rem; border-radius: var(--radius-lg); text-align: center; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="#" class="brand-logo" onclick="switchModule('landing')">
+            <img src="rd_logo.jpeg" alt="RD Logo">
+            <span>RD - INDUSTRIES</span>
+        </a>
+        <div class="nav-links">
+            <a class="nav-link active" id="nav-landing" onclick="switchModule('landing')"><i class="fa-solid fa-house" style="color:var(--accent-blue);"></i> Home</a>
+            <a class="nav-link" id="nav-consult" onclick="protectedNavigate('consult')"><i class="fa-solid fa-comment" style="font-size:0.75rem; color:var(--accent-blue);"></i> Consult</a>
+            <a class="nav-link" id="nav-workspace" onclick="protectedNavigate('workspace')"><i class="fa-solid fa-laptop-code" style="font-size:0.75rem; color:var(--accent-blue);"></i> Workspace (IDE)</a>
+            <a class="nav-link" id="nav-analytics" onclick="protectedNavigate('analytics')"><i class="fa-solid fa-chart-line" style="font-size:0.75rem; color:var(--accent-blue);"></i> Analytics</a>
+            <a class="nav-link" id="nav-referral" onclick="protectedNavigate('referral')"><i class="fa-solid fa-user-friends" style="font-size:0.75rem; color:var(--accent-blue);"></i> Referral</a>
+
+            <span id="nav-auth-btn-slot">
+                <a href="login.html" class="btn btn-primary" style="padding: 0.35rem 0.8rem; font-size: 0.8rem; margin-left: 0.5rem;"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
+            </span>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <!-- LOGGED-IN USER PROFILE BANNER -->
+        <div id="userProfileBanner" style="display: none; padding-top: 70px;">
+            <div class="user-profile-bar">
+                <div class="user-info">
+                    <i class="fa-solid fa-circle-user" style="font-size: 1.2rem;"></i>
+                    <span>Authenticated User: <strong id="activeUserName" style="color: #fff;">User</strong></span>
+                </div>
+                <button class="btn btn-danger" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="logout()">
+                    <i class="fa-solid fa-power-off"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- 1. LANDING MODULE -->
+        <section id="module-landing" class="module active">
+            <div style="text-align: center; padding: 3rem 1rem;">
+                <h1 style="font-family: var(--font-heading); font-size: 2.2rem; background: var(--silver-metallic); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem;">
+                    RD - Industries Engineering
+                </h1>
+                <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto 1.5rem;">
+                    Next-Gen Web Designing, Software Engineering & Tech Advisory Console.
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="protectedNavigate('workspace')"><i class="fa-solid fa-terminal"></i> Open Live Workspace (IDE)</button>
+                    <button class="btn btn-secondary" onclick="protectedNavigate('consult')"><i class="fa-solid fa-comments"></i> Consult & Contact</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. CONSULTATION & REAL WEBRTC VIDEO CALL MODULE -->
+        <section id="module-consult" class="module">
+            <div class="form-card">
+                <h2 style="font-family: var(--font-heading); text-align: center; margin-bottom: 0.5rem;"><i class="fa-solid fa-headset" style="color:var(--accent-purple);"></i> Real WebRTC Video Call Studio</h2>
+                
+                <div class="video-studio-grid">
+                    <!-- Local Camera Feed -->
+                    <div class="video-viewport">
+                        <video id="localVideo" autoplay muted playsinline></video>
+                        <span class="video-tag"><i class="fa-solid fa-user"></i> Local Camera Feed (You)</span>
+                    </div>
+
+                    <!-- Remote Admin Camera Feed -->
+                    <div class="video-viewport">
+                        <video id="remoteVideo" autoplay playsinline></video>
+                        <span class="video-tag"><i class="fa-solid fa-user-shield"></i> Live Admin Camera Stream</span>
+                    </div>
+                </div>
+
+                <!-- Call Notes Area -->
+                <div class="notes-card" style="margin-top: 1rem;">
+                    <label style="font-size: 0.8rem; font-weight: 600; color: var(--accent-blue); margin-bottom: 0.5rem;">
+                        <i class="fa-solid fa-pen-to-square"></i> Call Meeting Notes
+                    </label>
+                    <textarea id="callNotesInput" class="form-control" style="height: 100px; font-size: 0.85rem;" placeholder="Write queries and notes here..."></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <span id="callStatusText" style="color: var(--accent-blue); font-size: 0.85rem;">Status: Camera Inactive</span>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-purple" id="btnStartCall" onclick="startClientRealCall()"><i class="fa-solid fa-video"></i> Connect Real Call</button>
+                        <button class="btn btn-danger" id="btnEndCall" style="display:none;" onclick="endRealCall()"><i class="fa-solid fa-phone-slash"></i> End Call</button>
+                        <button class="btn btn-green" onclick="handleWhatsAppConsult()"><i class="fa-brands fa-whatsapp"></i> Chat via WhatsApp</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. WORKSPACE MODULE -->
+        <section id="module-workspace" class="module">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="font-family: var(--font-heading); font-size: 1.1rem;"><i class="fa-solid fa-laptop-code" style="color:var(--accent-blue);"></i> RD Workspace IDE</h2>
+                <button class="btn btn-green" onclick="runAndDebugCode()"><i class="fa-solid fa-play"></i> Run & Debug</button>
+            </div>
+
+            <div class="ide-container">
+                <div class="ide-topbar">
+                    <span><i class="fa-solid fa-folder-tree"></i> Project Workspace / main.html</span>
+                    <button class="btn btn-primary" style="padding: 2px 8px; font-size: 0.7rem;" onclick="syncWorkspaceToAdmin()">Sync Code</button>
+                </div>
+
+                <div class="ide-tabs">
+                    <div class="ide-tab active" id="tab-html" onclick="switchCodeTab('html')"><i class="fa-brands fa-html5" style="color:#e34c26;"></i> index.html</div>
+                    <div class="ide-tab" id="tab-css" onclick="switchCodeTab('css')"><i class="fa-brands fa-css3-alt" style="color:#264de4;"></i> style.css</div>
+                    <div class="ide-tab" id="tab-js" onclick="switchCodeTab('js')"><i class="fa-brands fa-js" style="color:#f7df1e;"></i> script.js</div>
+                </div>
+
+                <div class="ide-body">
+                    <div style="position: relative;">
+                        <textarea id="codeHTML" class="code-editor" placeholder="<!-- Write HTML here -->"><h1>Hello RD-Industries</h1>&#10;<p>Protected Workspace Live View</p></textarea>
+                        <textarea id="codeCSS" class="code-editor" style="display:none;" placeholder="/* Write CSS here */">h1 { color: #38bdf8; font-family: sans-serif; }</textarea>
+                        <textarea id="codeJS" class="code-editor" style="display:none;" placeholder="// Write JS here">console.log("Logged-In Workspace Executed!");</textarea>
+                    </div>
+                    <iframe id="liveOutputFrame" class="output-panel" title="Live Preview"></iframe>
+                </div>
+
+                <div class="terminal-console" id="debugTerminal">
+                    [Terminal] Console Ready. Click "Run & Debug" to build and update real progress...
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. REAL ACCURATE DYNAMIC ANALYTICS MODULE -->
+        <section id="module-analytics" class="module">
+            <h2 style="font-family: var(--font-heading); margin-bottom: 0.5rem;"><i class="fa-solid fa-chart-line" style="color:var(--accent-blue);"></i> Daily Real Work Analytics</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;" id="liveDateSubtitle">Fetching Live System Analytics...</p>
+            <div class="form-card" style="max-width: 100%;">
+                <canvas id="liveChart" style="max-height: 320px;"></canvas>
+            </div>
+        </section>
+
+        <!-- 5. REFERRAL MODULE -->
+        <section id="module-referral" class="module">
+            <div class="form-card" style="max-width:600px;">
+                <h2 style="font-family: var(--font-heading); text-align: center; margin-bottom: 1rem;">Client Referral</h2>
+                <div class="form-group">
+                    <label>Referred Name</label>
+                    <input type="text" id="refName" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Contact Info</label>
+                    <input type="text" id="refContact" class="form-control">
+                </div>
+                <button class="btn btn-primary" onclick="submitReferral()" style="width: 100%;">Submit Referral</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- STRICT AUTH LOCK POPUP MODAL -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-card">
+            <i class="fa-solid fa-shield-halved" style="font-size: 2.5rem; color: var(--accent-blue); margin-bottom: 1rem;"></i>
+            <h3 style="font-family: var(--font-heading); margin-bottom: 0.5rem;">Access Restricted</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+                You are not logged in! Logging in or signing up is mandatory to access More.
+            </p>
+            <div style="display: flex; gap: 0.8rem; justify-content: center;">
+                <a href="login.html" class="btn btn-primary" style="flex: 1;"><i class="fa-solid fa-right-to-bracket"></i> Login Now</a>
+                <a href="signup.html" class="btn btn-secondary" style="flex: 1;"><i class="fa-solid fa-user-plus"></i> Sign Up</a>
+            </div>
+            <button onclick="closeAuthModal()" style="margin-top: 1rem; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem;">
+                Dismiss & Back to Landing Page
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_WHATSAPP = "+917990234132";
+        let peer = null;
+        let localStream = null;
+
+        function getTodayKey(dateObj = new Date()) {
+            return dateObj.toISOString().split('T')[0];
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            checkUserSession();
+            updateLiveDateSubtitle();
+        });
+
+        function checkUserSession() {
+            const activeUser = JSON.parse(localStorage.getItem('rd_active_user'));
+            const profileBanner = document.getElementById('userProfileBanner');
+            const authSlot = document.getElementById('nav-auth-btn-slot');
+            const userNameElem = document.getElementById('activeUserName');
+            
+            if (activeUser) {
+                if (profileBanner) profileBanner.style.display = 'block';
+                if (userNameElem) userNameElem.innerText = activeUser.name || 'User';
+                if (authSlot) authSlot.style.display = 'none';
+            } else {
+                if (profileBanner) profileBanner.style.display = 'none';
+                if (authSlot) authSlot.style.display = 'inline-block';
+            }
+        }
+
+        function protectedNavigate(modId) {
+            const activeUser = JSON.parse(localStorage.getItem('rd_active_user'));
+            if (!activeUser) {
+                const authModal = document.getElementById('authModal');
+                if (authModal) authModal.classList.add('show');
+                return;
+            }
+            switchModule(modId);
+        }
+
+        function closeAuthModal() {
+            const authModal = document.getElementById('authModal');
+            if (authModal) authModal.classList.remove('show');
+            switchModule('landing');
+        }
+
+        // SAFE LOGOUT: Only clears session key
+        function logout() {
+            endRealCall();
+            localStorage.removeItem('rd_active_user');
+            window.location.reload();
+        }
+
+        function switchModule(modId) {
+            document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+            const target = document.getElementById(`module-${modId}`);
+            const targetNav = document.getElementById(`nav-${modId}`);
+            
+            if (target) target.classList.add('active');
+            if (targetNav) targetNav.classList.add('active');
+
+            if (modId === 'analytics') {
+                renderDynamicChart();
+            }
+        }
+
+        // REAL WEBRTC VIDEO CALL LOGIC VIA PEERJS
+        async function startClientRealCall() {
+            const status = document.getElementById('callStatusText');
+            if (status) status.innerText = "Accessing Camera & Mic...";
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                const localVideo = document.getElementById('localVideo');
+                if (localVideo) localVideo.srcObject = localStream;
+
+                if (status) status.innerText = "Connecting to Live Peer Server...";
+
+                peer = new Peer('rd_client_user_session');
+
+                peer.on('open', (id) => {
+                    if (status) status.innerText = "Waiting for Admin to join...";
+                    const btnStart = document.getElementById('btnStartCall');
+                    const btnEnd = document.getElementById('btnEndCall');
+                    if (btnStart) btnStart.style.display = 'none';
+                    if (btnEnd) btnEnd.style.display = 'inline-flex';
+                });
+
+                peer.on('call', (call) => {
+                    call.answer(localStream);
+                    call.on('stream', (remoteStream) => {
+                        const remoteVideo = document.getElementById('remoteVideo');
+                        if (remoteVideo) remoteVideo.srcObject = remoteStream;
+                        if (status) status.innerText = "Call Active - Live Audio/Video Connected!";
+                    });
+                });
+
+                peer.on('error', (err) => {
+                    if (status) status.innerText = "Peer Connection Error: " + err.type;
+                });
+
+            } catch (err) {
+                alert("Camera Access Denied or Error: " + err.message);
+                if (status) status.innerText = "Camera Access Failed.";
+            }
+        }
+
+        function endRealCall() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            if (peer) {
+                peer.destroy();
+                peer = null;
+            }
+
+            const localVideo = document.getElementById('localVideo');
+            const remoteVideo = document.getElementById('remoteVideo');
+            const btnStart = document.getElementById('btnStartCall');
+            const btnEnd = document.getElementById('btnEndCall');
+            const status = document.getElementById('callStatusText');
+
+            if (localVideo) localVideo.srcObject = null;
+            if (remoteVideo) remoteVideo.srcObject = null;
+            if (btnStart) btnStart.style.display = 'inline-flex';
+            if (btnEnd) btnEnd.style.display = 'none';
+            if (status) status.innerText = "Call Ended.";
+        }
+
+        function handleWhatsAppConsult() {
+            const text = `*RD-Industries Inquiry*%0A%0AHello Admin, I want to discuss a new web development project.`;
+            window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${text}`, '_blank');
+        }
+
+        // WORKSPACE CODE EXECUTION
+        function switchCodeTab(type) {
+            document.querySelectorAll('.ide-tab').forEach(t => t.classList.remove('active'));
+            const targetTab = document.getElementById(`tab-${type}`);
+            if (targetTab) targetTab.classList.add('active');
+
+            const htmlEdit = document.getElementById('codeHTML');
+            const cssEdit = document.getElementById('codeCSS');
+            const jsEdit = document.getElementById('codeJS');
+
+            if (htmlEdit) htmlEdit.style.display = (type === 'html') ? 'block' : 'none';
+            if (cssEdit) cssEdit.style.display = (type === 'css') ? 'block' : 'none';
+            if (jsEdit) jsEdit.style.display = (type === 'js') ? 'block' : 'none';
+        }
+
+        function runAndDebugCode() {
+            const htmlVal = document.getElementById('codeHTML')?.value || '';
+            const cssVal = `<style>${document.getElementById('codeCSS')?.value || ''}</style>`;
+            const jsVal = document.getElementById('codeJS')?.value || '';
+
+            const frameElem = document.getElementById('liveOutputFrame');
+            if (frameElem) {
+                const frame = frameElem.contentWindow.document;
+                frame.open();
+                const closingScript = '</scr' + 'ipt>';
+                frame.write(htmlVal + cssVal + '<script>' + jsVal + closingScript);
+                frame.close();
+            }
+
+            // Store Real Activity Progress in LocalStorage
+            let activityMap = JSON.parse(localStorage.getItem('rd_daily_activity_map')) || {};
+            const today = getTodayKey();
+            activityMap[today] = (activityMap[today] || 0) + 10;
+            localStorage.setItem('rd_daily_activity_map', JSON.stringify(activityMap));
+
+            const terminal = document.getElementById('debugTerminal');
+            if (terminal) {
+                terminal.innerHTML = `[Debugger]: Output Rendered. Today's Activity Points: ${activityMap[today]}<br>`;
+            }
+        }
+
+        function syncWorkspaceToAdmin() {
+            const activeUser = JSON.parse(localStorage.getItem('rd_active_user')) || { name: 'Client' };
+            let works = JSON.parse(localStorage.getItem('rd_workspace_logs')) || [];
+            
+            works.unshift({
+                user: activeUser.name,
+                html: document.getElementById('codeHTML')?.value || '',
+                css: document.getElementById('codeCSS')?.value || '',
+                js: document.getElementById('codeJS')?.value || '',
+                timestamp: new Date().toLocaleString()
+            });
+            
+            localStorage.setItem('rd_workspace_logs', JSON.stringify(works));
+            alert('Workspace Code Synced to Admin Portal!');
+        }
+
+        function updateLiveDateSubtitle() {
+            const activityMap = JSON.parse(localStorage.getItem('rd_daily_activity_map')) || {};
+            const todayPts = activityMap[getTodayKey()] || 0;
+            const now = new Date();
+            const subtitle = document.getElementById('liveDateSubtitle');
+            if (subtitle) {
+                subtitle.innerText = `Tracker Date: ${now.toDateString()} | Today's Real Productivity Points: ${todayPts}`;
+            }
+        }
+
+        // ACCURATE DYNAMIC CHART
+        let currentChartObj = null;
+        function renderDynamicChart() {
+            updateLiveDateSubtitle();
+            const canvasElem = document.getElementById('liveChart');
+            if (!canvasElem) return;
+
+            const ctx = canvasElem.getContext('2d');
+            if (currentChartObj) {
+                currentChartObj.destroy();
+            }
+
+            const activityMap = JSON.parse(localStorage.getItem('rd_daily_activity_map')) || {};
+            const now = new Date();
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            
+            let dynamicLabels = [];
+            let dynamicData = [];
+
+            for (let i = 6; i >= 0; i--) {
+                let d = new Date();
+                d.setDate(now.getDate() - i);
+                
+                const dateKey = getTodayKey(d);
+                const dayLabel = `${days[d.getDay()]} (${d.getDate()}/${d.getMonth() + 1})`;
+                
+                dynamicLabels.push(dayLabel);
+                dynamicData.push(activityMap[dateKey] || 0);
+            }
+
+            currentChartObj = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dynamicLabels,
+                    datasets: [{
+                        label: 'Real Workspace Activity Index',
+                        data: dynamicData,
+                        borderColor: '#38bdf8',
+                        backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            min: 0,
+                            suggestedMax: 50
+                        }
+                    }
+                }
+            });
+        }
+
+        function submitReferral() {
+            const activeUser = JSON.parse(localStorage.getItem('rd_active_user')) || { name: 'Client' };
+            const refNameElem = document.getElementById('refName');
+            const refContactElem = document.getElementById('refContact');
+
+            if (!refNameElem?.value || !refContactElem?.value) {
+                alert('Please enter referral details!');
+                return;
+            }
+
+            let refs = JSON.parse(localStorage.getItem('rd_referral_logs')) || [];
+            refs.unshift({
+                referredBy: activeUser.name,
+                refName: refNameElem.value,
+                refContact: refContactElem.value,
+                timestamp: new Date().toLocaleString()
+            });
+            
+            localStorage.setItem('rd_referral_logs', JSON.stringify(refs));
+            alert('Referral Lead Submitted Successfully!');
+            
+            refNameElem.value = '';
+            refContactElem.value = '';
+        }
+    </script>
+</body>
+</html>

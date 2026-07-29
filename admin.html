@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RD - Industries | Executive Command Dashboard</title>
+    
+    <!-- FontAwesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- PEERJS REAL-TIME WEBRTC CDN -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+    <style>
+        :root {
+            --bg-primary: #0a0c10;
+            --bg-card: #12161f;
+            --surface-border: rgba(255, 255, 255, 0.08);
+            --silver-primary: #e2e8f0;
+            --silver-metallic: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #64748b 100%);
+            --accent-blue: #38bdf8;
+            --accent-green: #25D366;
+            --accent-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --font-heading: 'Orbitron', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-body); }
+        body { background-color: var(--bg-primary); color: var(--text-main); padding: 1.5rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        /* HEADER */
+        .dash-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 2rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 1rem;
+        }
+        .dash-header h1 {
+            font-family: var(--font-heading); font-size: 1.5rem;
+            background: var(--silver-metallic); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* METRICS COUNTER GRID */
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .metric-card {
+            background: var(--bg-card); border: 1px solid var(--surface-border);
+            padding: 1.25rem; border-radius: var(--radius-md); display: flex; align-items: center; gap: 1rem;
+        }
+        .metric-icon { width: 45px; height: 45px; border-radius: 10px; background: rgba(56, 189, 248, 0.1); color: var(--accent-blue); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .metric-num { font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; }
+        .metric-label { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* MAIN DASHBOARD CARDS */
+        .card { background: var(--bg-card); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .card-title { font-family: var(--font-heading); font-size: 1.1rem; color: var(--accent-blue); display: flex; align-items: center; gap: 8px; }
+
+        /* DATA ROWS */
+        .item-row {
+            background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border);
+            padding: 1rem; border-radius: var(--radius-md); margin-bottom: 0.75rem;
+            display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .item-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+        .action-btns { display: flex; gap: 0.5rem; margin-top: 0.4rem; flex-wrap: wrap; }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px; padding: 0.4rem 0.8rem;
+            border-radius: 8px; font-size: 0.8rem; font-weight: 600; text-decoration: none;
+            cursor: pointer; border: none; transition: 0.2s;
+        }
+        .btn-whatsapp { background: #25D366; color: #000; }
+        .btn-call { background: var(--accent-blue); color: #000; }
+        .btn-video { background: #a855f7; color: #fff; }
+        .btn-danger { background: var(--accent-red); color: #fff; }
+
+        /* REAL LIVE VIDEO WEBRTC CONSOLE FOR ADMIN */
+        .admin-video-box {
+            background: #000; border: 1px solid var(--surface-border); border-radius: var(--radius-md);
+            padding: 1rem; display: none; margin-top: 1rem;
+        }
+        .video-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1rem; }
+        @media(min-width: 768px) { .video-grid { grid-template-columns: 1fr 1fr; } }
+        
+        .video-viewport {
+            height: 240px; background: #111; border-radius: 8px;
+            position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        .video-tag { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.75); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; z-index: 10; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- HEADER -->
+        <div class="dash-header">
+            <div>
+                <h1>RD - INDUSTRIES COMMAND CENTER</h1>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Real-time Client Monitoring & WebRTC Video Call Portal</p>
+            </div>
+            <button class="btn btn-danger" onclick="clearAllLogs()"><i class="fa-solid fa-trash-can"></i> Clear All Data</button>
+        </div>
+
+        <!-- METRICS OVERVIEW COUNTERS -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon"><i class="fa-solid fa-users"></i></div>
+                <div>
+                    <div class="metric-num" id="countUsers">0</div>
+                    <div class="metric-label">Registered Users</div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon" style="color: var(--accent-green); background: rgba(37,211,102,0.1);"><i class="fa-solid fa-share-nodes"></i></div>
+                <div>
+                    <div class="metric-num" id="countRefs">0</div>
+                    <div class="metric-label">Referral Leads</div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon" style="color: #a855f7; background: rgba(168,85,247,0.1);"><i class="fa-solid fa-code"></i></div>
+                <div>
+                    <div class="metric-num" id="countCodes">0</div>
+                    <div class="metric-label">IDE Submissions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. REGISTERED USERS & LIVE CALLING HUB -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><i class="fa-solid fa-id-card"></i> Registered Users & Real Video Call</div>
+            </div>
+            <div id="usersContainer"></div>
+
+            <!-- REAL LIVE WEBRTC VIDEO MEETING CONSOLE -->
+            <div class="admin-video-box" id="adminCallConsole">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <strong id="activeCallUser" style="color: var(--accent-blue);">Calling Client...</strong>
+                    <span id="callStatusText" style="font-size: 0.85rem; color: var(--text-muted);">Status: Initializing WebRTC Stream</span>
+                </div>
+
+                <div class="video-grid">
+                    <!-- Admin Camera Stream (Local) -->
+                    <div class="video-viewport">
+                        <video id="adminLocalVideo" autoplay muted playsinline></video>
+                        <span class="video-tag"><i class="fa-solid fa-user-shield"></i> You (Admin Camera Feed)</span>
+                    </div>
+
+                    <!-- Client Stream (Remote WebRTC) -->
+                    <div class="video-viewport">
+                        <video id="adminRemoteVideo" autoplay playsinline></video>
+                        <span class="video-tag"><i class="fa-solid fa-user"></i> Live Client Video Feed</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-danger" onclick="endAdminCall()"><i class="fa-solid fa-phone-slash"></i> End WebRTC Meeting</button>
+            </div>
+        </div>
+
+        <!-- 2. REFERRAL LEADS & DIRECT WHATSAPP/CALL CONSOLE -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><i class="fa-solid fa-user-plus"></i> Referral Leads (Direct Outreach)</div>
+            </div>
+            <div id="referralsContainer"></div>
+        </div>
+
+        <!-- 3. LIVE WORKSPACE IDE SUBMISSIONS -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><i class="fa-solid fa-laptop-code"></i> User IDE Workspace Submissions</div>
+            </div>
+            <div id="workspaceContainer"></div>
+        </div>
+
+    </div>
+
+    <script>
+        let adminPeer = null;
+        let adminStream = null;
+
+        function renderAdminDashboard() {
+            // Load Data from LocalStorage
+            const users = JSON.parse(localStorage.getItem('rd_registered_users')) || [];
+            const refs = JSON.parse(localStorage.getItem('rd_referral_logs')) || [];
+            const works = JSON.parse(localStorage.getItem('rd_workspace_logs')) || [];
+
+            // Update Metric Counts
+            document.getElementById('countUsers').innerText = users.length;
+            document.getElementById('countRefs').innerText = refs.length;
+            document.getElementById('countCodes').innerText = works.length;
+
+            // 1. Render Users
+            const uBox = document.getElementById('usersContainer');
+            uBox.innerHTML = users.length ? users.map(u => `
+                <div class="item-row">
+                    <div class="item-meta">
+                        <span><strong>Name:</strong> ${u.name} | <strong>Email:</strong> ${u.email}</span>
+                        <span style="color: var(--accent-green);"><i class="fa-solid fa-circle" style="font-size:0.6rem;"></i> Account Active</span>
+                    </div>
+                    <div class="action-btns">
+                        <button class="btn btn-video" onclick="startVideoMeeting('${u.name}')"><i class="fa-solid fa-video"></i> Start Real Video Call</button>
+                    </div>
+                </div>
+            `).join('') : '<p style="color: var(--text-muted);">No users registered yet.</p>';
+
+            // 2. Render Referrals with WhatsApp & Direct Call
+            const rBox = document.getElementById('referralsContainer');
+            rBox.innerHTML = refs.length ? refs.map(r => {
+                const cleanPhone = r.refContact.replace(/[^0-9]/g, '');
+                return `
+                    <div class="item-row">
+                        <div class="item-meta">
+                            <span><strong>Referred Lead:</strong> ${r.refName} (Contact: ${r.refContact})</span>
+                            <span style="color: var(--text-muted);">By: ${r.referredBy}</span>
+                        </div>
+                        <div class="action-btns">
+                            <a class="btn btn-whatsapp" href="https://wa.me/${cleanPhone}?text=Hello%20${encodeURIComponent(r.refName)},%20we%20got%20your%20reference%20via%20${encodeURIComponent(r.referredBy)}%20from%20RD-Industries." target="_blank">
+                                <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp
+                            </a>
+                            <a class="btn btn-call" href="tel:${cleanPhone}">
+                                <i class="fa-solid fa-phone"></i> Call via Phone
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('') : '<p style="color: var(--text-muted);">No referral leads recorded.</p>';
+
+            // 3. Render Workspace Code Submissions
+            const wBox = document.getElementById('workspaceContainer');
+            wBox.innerHTML = works.length ? works.map(w => `
+                <div class="item-row">
+                    <div class="item-meta">
+                        <span><strong>Developer:</strong> ${w.user}</span>
+                        <span style="color: var(--text-muted);">${w.timestamp}</span>
+                    </div>
+                    <div style="background:#000; padding:0.6rem; border-radius:6px; font-family:monospace; font-size:0.8rem;">
+                        <span style="color:#38bdf8;">// HTML Snippet</span><br>
+                        ${escapeHTML(w.html)}
+                    </div>
+                </div>
+            `).join('') : '<p style="color: var(--text-muted);">No workspace submissions synced.</p>';
+        }
+
+        // REAL WEBRTC VIDEO STREAM LOGIC FOR ADMIN
+        async function startVideoMeeting(userName) {
+            const consoleBox = document.getElementById('adminCallConsole');
+            const status = document.getElementById('callStatusText');
+            
+            consoleBox.style.display = 'block';
+            document.getElementById('activeCallUser').innerText = `Live WebRTC Call with: ${userName}`;
+            status.innerText = "Requesting Admin Camera & Mic...";
+
+            try {
+                // 1. Capture Admin Camera & Microphone Stream
+                adminStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('adminLocalVideo').srcObject = adminStream;
+
+                status.innerText = "Dialing Client Session...";
+
+                // 2. Connect via PeerJS to client's active call session
+                adminPeer = new Peer();
+
+                adminPeer.on('open', (id) => {
+                    const call = adminPeer.call('rd_client_user_session', adminStream);
+                    
+                    call.on('stream', (remoteStream) => {
+                        document.getElementById('adminRemoteVideo').srcObject = remoteStream;
+                        status.innerText = "Connected - Real Audio & Video Active!";
+                    });
+
+                    call.on('error', (err) => {
+                        status.innerText = "Connection error: Client not active.";
+                    });
+                });
+
+            } catch (err) {
+                alert("Admin Camera Access Permission Denied or Error: " + err.message);
+                status.innerText = "Camera Access Failed.";
+            }
+        }
+
+        function endAdminCall() {
+            if (adminStream) {
+                adminStream.getTracks().forEach(track => track.stop());
+            }
+            if (adminPeer) adminPeer.destroy();
+
+            document.getElementById('adminLocalVideo').srcObject = null;
+            document.getElementById('adminRemoteVideo').srcObject = null;
+            document.getElementById('adminCallConsole').style.display = 'none';
+            alert('Meeting Session Closed.');
+        }
+
+        function clearAllLogs() {
+            if(confirm("Are you sure you want to clear all admin logs?")) {
+                localStorage.removeItem('rd_workspace_logs');
+                localStorage.removeItem('rd_referral_logs');
+                renderAdminDashboard();
+            }
+        }
+
+        function escapeHTML(str) {
+            return str ? str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
+        }
+
+        // Initial Load
+        renderAdminDashboard();
+    </script>
+</body>
+</html>
