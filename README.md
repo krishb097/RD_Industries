@@ -18,6 +18,11 @@ This platform features protected user modules, real-time WebRTC live video calli
 
 ---
 
+## 🔗 URLs & LINKs
+RD_Industires : https://krishb097.github.io/RD_Industries
+
+---
+
 ## 📁 Project Architecture & File Structure
 
 ```text
@@ -27,8 +32,3 @@ This platform features protected user modules, real-time WebRTC live video calli
 ├── signup.html         # Dedicated Account Registration Portal
 ├── admin.html          # Standalone Executive Command & Monitoring Portal
 └── README.md           # Project Documentation
-
----
-
-## 🔗 URLs & LINKs
-RD_Industires : 
