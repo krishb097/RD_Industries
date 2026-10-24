@@ -321,7 +321,7 @@
                 if (authSlot) authSlot.style.display = 'inline-block';
             }
         }
-
+        // Navigation Protection for without login user
         function protectedNavigate(modId) {
             const activeUser = JSON.parse(localStorage.getItem('rd_active_user'));
             if (!activeUser) {
