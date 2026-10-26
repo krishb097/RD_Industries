@@ -133,7 +133,8 @@
         </a>
         <div class="nav-links">
             <a class="nav-link active" id="nav-landing" onclick="switchModule('landing')"><i class="fa-solid fa-house" style="color:var(--accent-blue);"></i> Home</a>
-            <a class="nav-link" id="nav-consult" onclick="protectedNavigate('consult')"><i class="fa-solid fa-comment" style="font-size:0.75rem; color:var(--accent-blue);"></i> Consult</a>
+            <!-- UPDATED WITH INTENTIONAL BUG FOR PR -->
+            <a class="nav-link" id="nav-consult" onclick="openPublicConsultation()"><i class="fa-solid fa-comment" style="font-size:0.75rem; color:var(--accent-blue);"></i> Consult</a>
             <a class="nav-link" id="nav-workspace" onclick="protectedNavigate('workspace')"><i class="fa-solid fa-laptop-code" style="font-size:0.75rem; color:var(--accent-blue);"></i> Workspace (IDE)</a>
             <a class="nav-link" id="nav-analytics" onclick="protectedNavigate('analytics')"><i class="fa-solid fa-chart-line" style="font-size:0.75rem; color:var(--accent-blue);"></i> Analytics</a>
             <a class="nav-link" id="nav-referral" onclick="protectedNavigate('referral')"><i class="fa-solid fa-user-friends" style="font-size:0.75rem; color:var(--accent-blue);"></i> Referral</a>
@@ -293,7 +294,7 @@
     </div>
 
     <script>
-        const ADMIN_WHATSAPP = "+917990234132";
+        const ADMIN_WHATSAPP = "+919988776655";
         let peer = null;
         let localStream = null;
 
@@ -330,6 +331,13 @@
                 return;
             }
             switchModule(modId);
+        }
+
+        // Function introduced in PR to allow public consultation
+        function openPublicConsultation() {
+            // Intentional Defect: undefined service handler triggers runtime exception
+            consultationDispatchService.initiatePublicSession();
+            switchModule('consult');
         }
 
         function closeAuthModal() {
